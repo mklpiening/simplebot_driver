@@ -3,6 +3,6 @@
     <node name="simplebot" pkg="simplebot_driver" type="simplebot" respawn="false" output="screen">
       <param name="port" type="string" value="/dev/ttyUSB0" />
       <param name="baudrate" type="int" value="115200" />
-      <param name="max_speed" type="double" value="1" />
+      <param name="max_speed" type="double" value="0.75" />
   </node>
 </launch>
