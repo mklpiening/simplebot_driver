@@ -9,7 +9,7 @@ void SimplebotRosController::moveCallback(const geometry_msgs::Twist::ConstPtr& 
     m_lastMoveCmdTime = ros::Time::now();
 
     double speed = std::max(-m_simplebot.m_maxSpeed, std::min(m_simplebot.m_maxSpeed, msg->linear.x));
-    m_simplebot.setSpeed(speed - msg->angular.z, speed + msg->angular.z);
+    m_simplebot.setSpeed(speed - msg->angular.z * 0.5, speed + msg->angular.z * 0.5);
 }
 
 void SimplebotRosController::timerHandler(const ros::TimerEvent& event)
