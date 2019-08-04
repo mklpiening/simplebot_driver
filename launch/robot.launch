@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
-    <node name="simplebot" pkg="simplebot_driver" type="simplebot" respawn="false" output="screen">
-      <param name="port" type="string" value="/dev/ttyUSB0" />
-      <param name="baudrate" type="int" value="115200" />
-      <param name="max_speed" type="double" value="0.75" />
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find simplebot_driver)/urdf/simplebot.urdf.xacro'" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  <node name="simplebot" pkg="simplebot_driver" type="simplebot" respawn="false" output="screen">
+    <param name="port" type="string" value="/dev/ttyUSB0" />
+    <param name="baudrate" type="int" value="115200" />
+    <param name="max_speed" type="double" value="0.75" />
   </node>
 </launch>
