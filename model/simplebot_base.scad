@@ -89,12 +89,12 @@ rotate([0, 0, 90]) {
             }
         }
 
-        translate([0.01, sideLength / 2, 0.045]) {
+        /*translate([0.01, sideLength / 2, 0.045]) {
             difference() {
                 cube([0.02, 0.03, 0.08], true);
                 cube([0.01, 0.02, 0.081], true);
             }
-        }
+        }*/
 
         translate([0, 0, -0.0195]) { 
             translate([0.027, 0.055, 0]) { 
