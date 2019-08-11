@@ -8,7 +8,7 @@
 class Simplebot 
 {
 public:
-    Simplebot(std::string port, uint32_t baud, double wheelRadius = 0.025, int stepsPerRotation = 200, double maxSpeed = 1);
+    Simplebot(std::string port, uint32_t baud, double axisLength = 0.18, double wheelRadius = 0.025, int stepsPerRotation = 200, double maxSpeed = 1);
     ~Simplebot() {}
     
     void setSpeed(double vL, double vR);
@@ -31,6 +31,7 @@ private:
     double m_lastRotLeft;
     double m_lastRotRight;
 
+    double m_axisLength;
     double m_wheelRadius;
     int m_stepsPerRotation;
 

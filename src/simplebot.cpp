@@ -7,11 +7,13 @@
 Simplebot::Simplebot(
         std::string port, 
         uint32_t baud,
+        double axisLength,
         double wheelRadius,
         int stepsPerRotation,
         double maxSpeed) : 
     m_io(), 
     m_serial(m_io, port),
+    m_axisLength(axisLength),
     m_wheelRadius(wheelRadius),
     m_stepsPerRotation(stepsPerRotation),
     m_maxSpeed(maxSpeed),
@@ -104,32 +106,32 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
                 }
             }
 
-            /*double wheelpos_l = 2.0 * M_PI * (dRotLeft % enc_per_turn_left) / enc_per_turn_left;
-            if (wheelpos_l > M_PI)
+            double wheelsLeft = 2.0 * M_PI * fmod(dRotLeft, 1);
+            if (wheelsLeft > M_PI)
             {
-                wheelpos_l -= 2.0 * M_PI;
+                wheelsLeft -= 2.0 * M_PI;
             }
-            if (wheelpos_l < -M_PI)
+            if (wheelsLeft < -M_PI)
             {
-                wheelpos_l += 2.0 * M_PI;
+                wheelsLeft += 2.0 * M_PI;
             }
 
-            double wheelpos_r = 2.0 * M_PI * (dRotRight % enc_per_turn_right) / enc_per_turn_right;
-            if (wheelpos_r > M_PI)
+            double wheelsRight = 2.0 * M_PI * fmod(dRotRight, 1);
+            if (wheelsRight > M_PI)
             {
-                wheelpos_r -= 2.0 * M_PI;
+                wheelsRight -= 2.0 * M_PI;
             }
-            if (wheelpos_r < -M_PI)
+            if (wheelsRight < -M_PI)
             {
-                wheelpos_r += 2.0 * M_PI;
-            }*/
+                wheelsRight += 2.0 * M_PI;
+            }
 
             double vX = (distLeft + distRight) * 0.5;
-            double vTheta = (distRight - distLeft) / 0.18 * 0.95;
+            double vTheta = (distRight - distLeft) / m_axisLength;
 
             if (m_onOdometryReceived)
             {
-                m_onOdometryReceived(m_x, m_y, m_theta, vX, vTheta, 0, 0);
+                m_onOdometryReceived(m_x, m_y, m_theta, vX, vTheta, wheelsLeft, wheelsRight);
             }
         }
     }

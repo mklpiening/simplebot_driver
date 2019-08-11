@@ -8,5 +8,8 @@
     <param name="port" type="string" value="/dev/ttyUSB0" />
     <param name="baudrate" type="int" value="115200" />
     <param name="max_speed" type="double" value="0.75" />
+    <param name="steps_per_rotation" type="int" value="90" />
+    <param name="wheel_radius" type="double" value="0.025" />
+    <param name="axis_length" type="double" value="0.18" />
   </node>
 </launch>

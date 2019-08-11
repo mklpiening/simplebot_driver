@@ -21,9 +21,11 @@ int main(int argc, char** argv)
     np.param("steps_per_rotation", stepsPerRotation, 90);
     double wheelRadius;
     np.param("wheel_radius", wheelRadius, 0.025);
+    double axisLength;
+    np.param("axis_length", axisLength, 0.18);
 
     std::cout << "connecting to device ..." << std::endl;
-    Simplebot simplebot(port, baudrate, wheelRadius, stepsPerRotation, maxSpeed);
+    Simplebot simplebot(port, baudrate, axisLength, wheelRadius, stepsPerRotation, maxSpeed);
     std::cout << "connected!" << std::endl;
 
     static SimplebotRosController controller(simplebot, n, tf::getPrefixParam(np));
