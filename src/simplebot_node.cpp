@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     double axisLength;
     np.param("axis_length", axisLength, 0.18);
     double turningAdaption;
-    np.param("turning_adaption", turningAdaption, 0.9);
+    np.param("turning_adaption", turningAdaption, 0.85);
 
     std::cout << "connecting to device ..." << std::endl;
     Simplebot simplebot(port, baudrate, axisLength, turningAdaption, wheelRadius, stepsPerRotation, maxSpeed);
