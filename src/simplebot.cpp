@@ -8,12 +8,14 @@ Simplebot::Simplebot(
         std::string port, 
         uint32_t baud,
         double axisLength,
+        double turningAdaptation,
         double wheelRadius,
         int stepsPerRotation,
         double maxSpeed) : 
     m_io(), 
     m_serial(m_io, port),
     m_axisLength(axisLength),
+    m_turningAdaptation(turningAdaptation),
     m_wheelRadius(wheelRadius),
     m_stepsPerRotation(stepsPerRotation),
     m_maxSpeed(maxSpeed),
@@ -88,7 +90,7 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
             double distLeft = 2.0 * M_PI * m_wheelRadius * dRotLeft;
             double distRight = 2.0 * M_PI * m_wheelRadius * dRotRight;
 
-            double dTheta = (distRight - distLeft) / 0.18;
+            double dTheta = (distRight - distLeft) / m_axisLength * m_turningAdaptation;
             double hypothenuse = 0.5 * (distLeft + distRight);
 
             if (abs(hypothenuse * cos(m_theta + dTheta * 0.5)) < 1) {
@@ -127,7 +129,7 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
             }
 
             double vX = (distLeft + distRight) * 0.5;
-            double vTheta = (distRight - distLeft) / m_axisLength;
+            double vTheta = (distRight - distLeft) / m_axisLength * m_turningAdaptation;
 
             if (m_onOdometryReceived)
             {
