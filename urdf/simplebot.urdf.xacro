@@ -112,9 +112,9 @@
   <link name="base_footprint"/>
 
   <joint name="base_footprint_joint" type="fixed">
-    <origin xyz="0 0 ${-(wheel_radius -  wheel_z_offset)}" rpy="0 0 0" />
-    <child link="base_footprint"/>
-    <parent link="base_link" />
+    <origin xyz="0 0 ${wheel_radius -  wheel_z_offset}" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="base_link" />
   </joint>
 
   <link name="base_top" />
@@ -135,7 +135,7 @@
       <rightRearJoint>right_rear_wheel_joint</rightRearJoint>
       <wheelSeparation>${axis_length}</wheelSeparation>
       <wheelDiameter>${2*wheel_radius}</wheelDiameter>
-      <robotBaseFrame>base_link</robotBaseFrame>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
       <torque>1</torque>
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom_combined</odometryTopic>
