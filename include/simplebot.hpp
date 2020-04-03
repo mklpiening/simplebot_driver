@@ -28,9 +28,6 @@ private:
 
     std::function<void(double, double, double, double, double, double, double)> m_onOdometryReceived;
 
-    double m_lastRotLeft;
-    double m_lastRotRight;
-
     double m_axisLength;
     double m_turningAdaptation;
     double m_wheelRadius;

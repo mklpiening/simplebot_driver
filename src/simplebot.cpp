@@ -19,8 +19,6 @@ Simplebot::Simplebot(
     m_wheelRadius(wheelRadius),
     m_stepsPerRotation(stepsPerRotation),
     m_maxSpeed(maxSpeed),
-    m_lastRotLeft(0.0),
-    m_lastRotRight(0.0),
     m_x(0.0),
     m_y(0.0),
     m_theta(0.0),
@@ -39,14 +37,32 @@ Simplebot::Simplebot(
 
 void Simplebot::setSpeed(double vL, double vR)
 {
-    uint8_t msg[4];
+    int64_t rotL = vL * 10000 / (2 * M_PI * m_wheelRadius);
+    int64_t rotR = vR * 10000 / (2 * M_PI * m_wheelRadius);
+
+    uint8_t msg[17];
     
     msg[0] = 0xFF;
-    msg[1] = (vL < 0 ? 2 : 0) | (vR < 0 ? 1 : 0);
-    msg[2] = 0xFF * ((vL < 0 ? -1 : 1) * vL);
-    msg[3] = 0xFF * ((vR < 0 ? -1 : 1) * vR);
 
-    boost::asio::write(m_serial, boost::asio::buffer(msg, 4));
+    msg[1] = (uint8_t)((rotL) & 0xFF);
+    msg[2] = (uint8_t)((rotL >> 8) & 0xFF);
+    msg[3] = (uint8_t)((rotL >> 16) & 0xFF);
+    msg[4] = (uint8_t)((rotL >> 24) & 0xFF);
+    msg[5] = (uint8_t)((rotL >> 32) & 0xFF);
+    msg[6] = (uint8_t)((rotL >> 40) & 0xFF);
+    msg[7] = (uint8_t)((rotL >> 48) & 0xFF);
+    msg[8] = (uint8_t)((rotL >> 56) & 0xFF);
+
+    msg[9] = (uint8_t)((rotR) & 0xFF);
+    msg[10] = (uint8_t)((rotR >> 8) & 0xFF);
+    msg[11] = (uint8_t)((rotR >> 16) & 0xFF);
+    msg[12] = (uint8_t)((rotR >> 24) & 0xFF);
+    msg[13] = (uint8_t)((rotR >> 32) & 0xFF);
+    msg[14] = (uint8_t)((rotR >> 40) & 0xFF);
+    msg[15] = (uint8_t)((rotR >> 48) & 0xFF);
+    msg[16] = (uint8_t)((rotR >> 56) & 0xFF);
+
+    boost::asio::write(m_serial, boost::asio::buffer(msg, 17));
 }
 
 void Simplebot::odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred)
@@ -55,8 +71,8 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
     {
         if(m_receiveBuffer[0] == 0xFF)
         {
-            long stepsLeft = 0;
-            stepsLeft = stepsLeft
+            long dRotL = 0;
+            dRotL = dRotL
                     | (m_receiveBuffer[1])
                     | (((long) m_receiveBuffer[2]) << 8)
                     | (((long) m_receiveBuffer[3]) << 16)
@@ -66,8 +82,8 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
                     | (((long) m_receiveBuffer[7]) << 48)
                     | (((long) m_receiveBuffer[8]) << 56);
 
-            long stepsRight = 0;
-            stepsRight = stepsRight
+            long dRotR = 0;
+            dRotR = dRotR
                     | (m_receiveBuffer[9])
                     | (((long) m_receiveBuffer[10]) << 8)
                     | (((long) m_receiveBuffer[11]) << 16)
@@ -77,15 +93,8 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
                     | (((long) m_receiveBuffer[15]) << 48)
                     | (((long) m_receiveBuffer[16]) << 56);
 
-            double rotLeft = (double) stepsLeft / (double) m_stepsPerRotation;
-            double rotRight = (double) stepsRight / (double) m_stepsPerRotation;
-
-            double dRotLeft = rotLeft - m_lastRotLeft;
-            double dRotRight = rotRight - m_lastRotRight;
-
-            m_lastRotLeft = rotLeft;
-            m_lastRotRight = rotRight;
-
+            double dRotLeft = (double) dRotL / 10000.0;
+            double dRotRight = (double) dRotR / 10000.0;
 
             double distLeft = 2.0 * M_PI * m_wheelRadius * dRotLeft;
             double distRight = 2.0 * M_PI * m_wheelRadius * dRotRight;
