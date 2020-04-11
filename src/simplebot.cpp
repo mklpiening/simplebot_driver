@@ -35,12 +35,23 @@ Simplebot::Simplebot(
     m_ioThread.swap(t);
 }
 
+bool checkParity(int64_t data) {
+    int numOnes = 0;
+    for (int i = 0; i < 64; i++) {
+        if (data & (1 << i)) {
+            numOnes++;
+        }  
+    }
+
+    return numOnes % 2 == 0;
+}
+
 void Simplebot::setSpeed(double vL, double vR)
 {
     int64_t rotL = vL * 10000 / (2 * M_PI * m_wheelRadius);
     int64_t rotR = vR * 10000 / (2 * M_PI * m_wheelRadius);
 
-    uint8_t msg[17];
+    uint8_t msg[19];
     
     msg[0] = 0xFF;
 
@@ -62,7 +73,11 @@ void Simplebot::setSpeed(double vL, double vR)
     msg[15] = (uint8_t)((rotR >> 48) & 0xFF);
     msg[16] = (uint8_t)((rotR >> 56) & 0xFF);
 
-    boost::asio::write(m_serial, boost::asio::buffer(msg, 17));
+    msg[17] = (uint8_t) (!checkParity(rotL)) | (uint8_t) (!checkParity(rotR)) << 1;
+
+    msg[18] = 0xFF;
+
+    boost::asio::write(m_serial, boost::asio::buffer(msg, 19));
 }
 
 void Simplebot::odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred)
