@@ -12,5 +12,6 @@
     <param name="wheel_radius" type="double" value="0.025" />
     <param name="axis_length" type="double" value="0.18" />
     <param name="turning_adaption" type="double" value="0.85" />
+    <param name="publish_tf" type="bool" value="true" />
   </node>
 </launch>

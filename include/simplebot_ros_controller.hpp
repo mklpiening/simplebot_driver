@@ -10,7 +10,7 @@
 class SimplebotRosController 
 {
 public:
-    SimplebotRosController(Simplebot& simplebot, ros::NodeHandle& n, std::string tfPrefix);
+    SimplebotRosController(Simplebot& simplebot, ros::NodeHandle& n, std::string tfPrefix, bool publishTf);
     void moveCallback(const geometry_msgs::Twist::ConstPtr& msg);
     void timerHandler(const ros::TimerEvent& event);
 
@@ -20,6 +20,7 @@ private:
     ros::NodeHandle m_n;
     std::string m_tfPrefix;
     ros::Time m_lastMoveCmdTime;
+    bool m_publisTf;
 
     ros::Publisher m_odomPub;
     ros::Publisher m_jointPub;

@@ -25,12 +25,14 @@ int main(int argc, char** argv)
     np.param("axis_length", axisLength, 0.18);
     double turningAdaption;
     np.param("turning_adaption", turningAdaption, 0.85);
+    bool publishTf;
+    np.param("publish_tf", publishTf, true);
 
     std::cout << "connecting to device ..." << std::endl;
     Simplebot simplebot(port, baudrate, axisLength, turningAdaption, wheelRadius, stepsPerRotation, maxSpeed);
     std::cout << "connected!" << std::endl;
 
-    static SimplebotRosController controller(simplebot, n, tf::getPrefixParam(np));
+    static SimplebotRosController controller(simplebot, n, tf::getPrefixParam(np), publishTf);
     ros::Timer timer = n.createTimer(ros::Duration(0.1), &SimplebotRosController::timerHandler, &controller);
     ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 10, &SimplebotRosController::moveCallback, &controller);
 

@@ -4,11 +4,12 @@
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_listener.h>
 
-SimplebotRosController::SimplebotRosController(Simplebot& simplebot, ros::NodeHandle& n, std::string tfPrefix) :
+SimplebotRosController::SimplebotRosController(Simplebot& simplebot, ros::NodeHandle& n, std::string tfPrefix, bool publishTf) :
         m_simplebot(simplebot),
         m_n(n),
         m_tfPrefix(tfPrefix),
         m_lastMoveCmdTime(0.0),
+        m_publisTf(publishTf),
         m_odomPub(m_n.advertise<nav_msgs::Odometry> ("odom", 10)),
         m_jointPub(m_n.advertise<sensor_msgs::JointState> ("joint_states", 1)) { }
 
@@ -50,17 +51,20 @@ void SimplebotRosController::sendOdometry(double x, double y, double theta, doub
     m_odomPub.publish(odom);
 
     // publish tf
-    geometry_msgs::TransformStamped odom_trans;
-    odom_trans.header.frame_id = tf::resolve(m_tfPrefix, "odom_combined");
-    odom_trans.child_frame_id = tf::resolve(m_tfPrefix, "base_footprint");
+    if (m_publisTf)
+    {
+        geometry_msgs::TransformStamped odom_trans;
+        odom_trans.header.frame_id = tf::resolve(m_tfPrefix, "odom_combined");
+        odom_trans.child_frame_id = tf::resolve(m_tfPrefix, "base_footprint");
 
-    odom_trans.header.stamp = ros::Time::now();
-    odom_trans.transform.translation.x = x;
-    odom_trans.transform.translation.y = y;
-    odom_trans.transform.translation.z = 0.0;
-    odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(theta);
+        odom_trans.header.stamp = ros::Time::now();
+        odom_trans.transform.translation.x = x;
+        odom_trans.transform.translation.y = y;
+        odom_trans.transform.translation.z = 0.0;
+        odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(theta);
 
-    m_odomBroadcaster.sendTransform(odom_trans);
+        m_odomBroadcaster.sendTransform(odom_trans);
+    }
 
     // publish wheel rotations
     sensor_msgs::JointState joint_state;
