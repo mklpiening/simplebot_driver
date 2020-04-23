@@ -26,7 +26,6 @@ include_directories(
 
 add_executable(simplebot 
   src/simplebot.cpp
-  src/simplebot_ros_controller.cpp
   src/simplebot_node.cpp
 )
 

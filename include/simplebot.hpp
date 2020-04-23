@@ -4,41 +4,53 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
 
-class Simplebot 
+class Simplebot
 {
 public:
-    Simplebot(std::string port, uint32_t baud, double axisLength = 0.18, double turningAdaptation = 0.85, double wheelRadius = 0.025, int stepsPerRotation = 200, double maxSpeed = 1);
-    ~Simplebot() {}
-    
-    void setSpeed(double vL, double vR);
-    
-    void odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred);
+  Simplebot();
+  ~Simplebot();
 
-    void setOnOdometryHandler(std::function<void(double, double, double, double, double, double, double)>& onOdometryReceived);
+  void setSpeed(double vL, double vR);
 
-    double m_maxSpeed;
+  void odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred);
 
 private:
-    void readOdometry();
+  void moveCallback(const geometry_msgs::Twist::ConstPtr& msg);
 
-    boost::thread m_ioThread;
-    boost::asio::io_service m_io;
-    boost::asio::serial_port m_serial;
+  void timerHandler(const ros::TimerEvent& event);
 
-    std::function<void(double, double, double, double, double, double, double)> m_onOdometryReceived;
+  void readOdometry();
 
-    double m_axisLength;
-    double m_turningAdaptation;
-    double m_wheelRadius;
-    int m_stepsPerRotation;
+  ros::NodeHandle nh_;
 
-    double m_x;
-    double m_y;
+  ros::Publisher odom_pub_;
+  ros::Publisher joint_pub_;
+  tf::TransformBroadcaster odom_broadcaster_;
+  ros::Subscriber cmd_vel_sub_;
+  ros::Timer cmd_timeout_timer_;
 
-    double m_theta;
+  ros::Time last_move_cmd_time_;
 
-    uint8_t m_receiveBuffer[17];
+  boost::thread io_thread_;
+  boost::asio::io_service io_;
+  std::unique_ptr<boost::asio::serial_port> serial_;
+
+  double max_speed_;
+  double axis_length_;
+  double turning_adaptation_;
+  double wheel_radius_;
+  bool publish_tf_;
+  std::string tf_prefix_;
+
+  double x_;
+  double y_;
+
+  double theta_;
+
+  uint8_t receive_buffer_[17];
 };
 
 #endif
