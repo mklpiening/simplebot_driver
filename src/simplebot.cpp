@@ -193,9 +193,23 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
       odom.pose.pose.position.z = 0.0;
       odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(theta_);
 
+      odom.pose.covariance[0] = 1;
+      odom.pose.covariance[7] = 1;
+      odom.pose.covariance[14] = 1;
+      odom.pose.covariance[21] = 1;
+      odom.pose.covariance[28] = 1;
+      odom.pose.covariance[35] = 1;
+
       odom.twist.twist.linear.x = vX;
       odom.twist.twist.linear.y = 0.0;
       odom.twist.twist.angular.z = vTheta;
+
+      odom.twist.covariance[0] = 1;
+      odom.twist.covariance[7] = 1;
+      odom.twist.covariance[14] = 1;
+      odom.twist.covariance[21] = 1;
+      odom.twist.covariance[28] = 1;
+      odom.twist.covariance[35] = 1;
 
       odom_pub_.publish(odom);
 
