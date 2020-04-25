@@ -31,6 +31,8 @@ Simplebot::Simplebot()
   nh_p.param("axis_length", axis_length_, 0.18);
   nh_p.param("turning_adaption", turning_adaptation_, 0.85);
   nh_p.param("publish_tf", publish_tf_, true);
+  nh_p.param("pose_variance", pose_variance_, 0.0);
+  nh_p.param("twist_variance", twist_variance_, 0.0);
 
   tf_prefix_ = tf::getPrefixParam(nh_p);
 
@@ -193,23 +195,23 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
       odom.pose.pose.position.z = 0.0;
       odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(theta_);
 
-      odom.pose.covariance[0] = 1;
-      odom.pose.covariance[7] = 1;
-      odom.pose.covariance[14] = 1;
-      odom.pose.covariance[21] = 1;
-      odom.pose.covariance[28] = 1;
-      odom.pose.covariance[35] = 1;
+      odom.pose.covariance[0] = pose_variance_;
+      odom.pose.covariance[7] = pose_variance_;
+      odom.pose.covariance[14] = pose_variance_;
+      odom.pose.covariance[21] = pose_variance_;
+      odom.pose.covariance[28] = pose_variance_;
+      odom.pose.covariance[35] = pose_variance_;
 
       odom.twist.twist.linear.x = vX;
       odom.twist.twist.linear.y = 0.0;
       odom.twist.twist.angular.z = vTheta;
 
-      odom.twist.covariance[0] = 1;
-      odom.twist.covariance[7] = 1;
-      odom.twist.covariance[14] = 1;
-      odom.twist.covariance[21] = 1;
-      odom.twist.covariance[28] = 1;
-      odom.twist.covariance[35] = 1;
+      odom.twist.covariance[0] = twist_variance_;
+      odom.twist.covariance[7] = twist_variance_;
+      odom.twist.covariance[14] = twist_variance_;
+      odom.twist.covariance[21] = twist_variance_;
+      odom.twist.covariance[28] = twist_variance_;
+      odom.twist.covariance[35] = twist_variance_;
 
       odom_pub_.publish(odom);
 

@@ -44,6 +44,8 @@ private:
   double wheel_radius_;
   bool publish_tf_;
   std::string tf_prefix_;
+  double pose_variance_;
+  double twist_variance_;
 
   double x_;
   double y_;
