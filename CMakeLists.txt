@@ -3,6 +3,7 @@ project(simplebot_driver)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
+  std_msgs
   nav_msgs
   roscpp
   sensor_msgs

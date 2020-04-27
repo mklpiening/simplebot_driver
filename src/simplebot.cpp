@@ -5,6 +5,7 @@
 #include <memory>
 #include <boost/bind.hpp>
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/JointState.h>
 #include <tf/transform_listener.h>
 
@@ -33,6 +34,15 @@ Simplebot::Simplebot()
   nh_p.param("publish_tf", publish_tf_, true);
   nh_p.param("pose_variance", pose_variance_, 0.0);
   nh_p.param("twist_variance", twist_variance_, 0.0);
+  nh_p.param("publish_motor_stat", publish_motor_stats_, false);
+
+  if (publish_motor_stats_)
+  {
+    front_left_speed_pub = nh_.advertise<std_msgs::Float32>("simplebot/speed_fl", 1);
+    front_right_speed_pub = nh_.advertise<std_msgs::Float32>("simplebot/speed_fr", 1);
+    rear_left_speed_pub = nh_.advertise<std_msgs::Float32>("simplebot/speed_rl", 1);
+    rear_right_speed_pub = nh_.advertise<std_msgs::Float32>("simplebot/speed_rr", 1);
+  }
 
   tf_prefix_ = tf::getPrefixParam(nh_p);
 
@@ -124,20 +134,24 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
   {
     if (receive_buffer_[0] == 0xFF)
     {
-      long dRotL = 0;
-      dRotL = dRotL | (receive_buffer_[1]) | (((long)receive_buffer_[2]) << 8) | (((long)receive_buffer_[3]) << 16) |
-              (((long)receive_buffer_[4]) << 24) | (((long)receive_buffer_[5]) << 32) |
-              (((long)receive_buffer_[6]) << 40) | (((long)receive_buffer_[7]) << 48) |
-              (((long)receive_buffer_[8]) << 56);
+      int16_t raw_d_rot_fl = 0;
+      raw_d_rot_fl = raw_d_rot_fl | (receive_buffer_[1]) | (((long)receive_buffer_[2]) << 8);
+      float d_rot_fl = (float)raw_d_rot_fl / 10000.0;
 
-      long dRotR = 0;
-      dRotR = dRotR | (receive_buffer_[9]) | (((long)receive_buffer_[10]) << 8) | (((long)receive_buffer_[11]) << 16) |
-              (((long)receive_buffer_[12]) << 24) | (((long)receive_buffer_[13]) << 32) |
-              (((long)receive_buffer_[14]) << 40) | (((long)receive_buffer_[15]) << 48) |
-              (((long)receive_buffer_[16]) << 56);
+      int16_t raw_d_rot_rl = 0;
+      raw_d_rot_rl = raw_d_rot_rl | (receive_buffer_[3]) | (((long)receive_buffer_[4]) << 8);
+      float d_rot_rl = (float)raw_d_rot_rl / 10000.0;
 
-      double dRotLeft = (double)dRotL / 10000.0;
-      double dRotRight = (double)dRotR / 10000.0;
+      int16_t raw_d_rot_fr = 0;
+      raw_d_rot_fr = raw_d_rot_fr | (receive_buffer_[5]) | (((long)receive_buffer_[6]) << 8);
+      float d_rot_fr = (float)raw_d_rot_fr / 10000.0;
+
+      int16_t raw_d_rot_rr = 0;
+      raw_d_rot_rr = raw_d_rot_rr | (receive_buffer_[7]) | (((long)receive_buffer_[8]) << 8);
+      float d_rot_rr = (float)raw_d_rot_rr / 10000.0;
+
+      double dRotLeft = (d_rot_fl + d_rot_rl) / 2;
+      double dRotRight = (d_rot_fr + d_rot_rr) / 2;
 
       double distLeft = 2.0 * M_PI * wheel_radius_ * dRotLeft;
       double distRight = 2.0 * M_PI * wheel_radius_ * dRotRight;
@@ -245,6 +259,24 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
       joint_state.position[2] = joint_state.position[3] = wheelsRight;
 
       joint_pub_.publish(joint_state);
+
+      if (publish_motor_stats_)
+      {
+        std_msgs::Float32 speed_msg;
+
+        speed_msg.data = d_rot_fl;
+        front_left_speed_pub.publish(speed_msg);
+
+        speed_msg.data = d_rot_rl;
+        rear_left_speed_pub.publish(speed_msg);
+
+
+        speed_msg.data = d_rot_fr;
+        front_right_speed_pub.publish(speed_msg);
+
+        speed_msg.data = d_rot_rr;
+        rear_right_speed_pub.publish(speed_msg);
+      }
     }
   }
 
@@ -253,7 +285,7 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
 
 void Simplebot::readOdometry()
 {
-  serial_->async_read_some(boost::asio::buffer(receive_buffer_, 17),
+  serial_->async_read_some(boost::asio::buffer(receive_buffer_, 9),
                            boost::bind(&Simplebot::odometryCallback, this, boost::asio::placeholders::error,
                                        boost::asio::placeholders::bytes_transferred));
 }

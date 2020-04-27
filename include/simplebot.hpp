@@ -28,6 +28,12 @@ private:
 
   ros::Publisher odom_pub_;
   ros::Publisher joint_pub_;
+
+  ros::Publisher front_left_speed_pub;
+  ros::Publisher front_right_speed_pub;
+  ros::Publisher rear_left_speed_pub;
+  ros::Publisher rear_right_speed_pub;
+
   tf::TransformBroadcaster odom_broadcaster_;
   ros::Subscriber cmd_vel_sub_;
   ros::Timer cmd_timeout_timer_;
@@ -46,13 +52,14 @@ private:
   std::string tf_prefix_;
   double pose_variance_;
   double twist_variance_;
+  bool publish_motor_stats_;
 
   double x_;
   double y_;
 
   double theta_;
 
-  uint8_t receive_buffer_[17];
+  uint8_t receive_buffer_[9];
 };
 
 #endif
