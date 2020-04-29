@@ -125,6 +125,8 @@ void Simplebot::setSpeed(double vL, double vR)
 
   msg[18] = 0xFF;
 
+
+
   boost::asio::write(*serial_, boost::asio::buffer(msg, 19));
 }
 
@@ -137,24 +139,30 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
       int16_t raw_d_rot_fl = 0;
       raw_d_rot_fl = raw_d_rot_fl | (receive_buffer_[1]) | (((long)receive_buffer_[2]) << 8);
       float d_rot_fl = (float)raw_d_rot_fl / 10000.0;
+      float d_dist_fl = 2.0 * M_PI * wheel_radius_ * d_rot_fl;
 
       int16_t raw_d_rot_rl = 0;
       raw_d_rot_rl = raw_d_rot_rl | (receive_buffer_[3]) | (((long)receive_buffer_[4]) << 8);
       float d_rot_rl = (float)raw_d_rot_rl / 10000.0;
+      float d_dist_rl = 2.0 * M_PI * wheel_radius_ * d_rot_rl;
 
       int16_t raw_d_rot_fr = 0;
       raw_d_rot_fr = raw_d_rot_fr | (receive_buffer_[5]) | (((long)receive_buffer_[6]) << 8);
       float d_rot_fr = (float)raw_d_rot_fr / 10000.0;
+      float d_dist_fr = 2.0 * M_PI * wheel_radius_ * d_rot_fr;
 
       int16_t raw_d_rot_rr = 0;
       raw_d_rot_rr = raw_d_rot_rr | (receive_buffer_[7]) | (((long)receive_buffer_[8]) << 8);
       float d_rot_rr = (float)raw_d_rot_rr / 10000.0;
+      float d_dist_rr = 2.0 * M_PI * wheel_radius_ * d_rot_rr;
+
+      uint8_t d_time = receive_buffer_[9];
 
       double dRotLeft = (d_rot_fl + d_rot_rl) / 2;
       double dRotRight = (d_rot_fr + d_rot_rr) / 2;
 
-      double distLeft = 2.0 * M_PI * wheel_radius_ * dRotLeft;
-      double distRight = 2.0 * M_PI * wheel_radius_ * dRotRight;
+      double distLeft = (d_dist_fl + d_dist_rl) / 2;
+      double distRight = (d_dist_fr + d_dist_rr) / 2;
 
       double dTheta = (distRight - distLeft) / axis_length_ * turning_adaptation_;
       double hypothenuse = 0.5 * (distLeft + distRight);
@@ -264,17 +272,17 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
       {
         std_msgs::Float32 speed_msg;
 
-        speed_msg.data = d_rot_fl;
+        speed_msg.data = d_dist_fl * 1000 / d_time;
         front_left_speed_pub.publish(speed_msg);
 
-        speed_msg.data = d_rot_rl;
+        speed_msg.data = d_dist_rl * 1000 / d_time;
         rear_left_speed_pub.publish(speed_msg);
 
 
-        speed_msg.data = d_rot_fr;
+        speed_msg.data = d_dist_fr * 1000 / d_time;
         front_right_speed_pub.publish(speed_msg);
 
-        speed_msg.data = d_rot_rr;
+        speed_msg.data = d_dist_rr * 1000 / d_time;
         rear_right_speed_pub.publish(speed_msg);
       }
     }
@@ -285,7 +293,7 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
 
 void Simplebot::readOdometry()
 {
-  serial_->async_read_some(boost::asio::buffer(receive_buffer_, 9),
+  serial_->async_read_some(boost::asio::buffer(receive_buffer_, 10),
                            boost::bind(&Simplebot::odometryCallback, this, boost::asio::placeholders::error,
                                        boost::asio::placeholders::bytes_transferred));
 }

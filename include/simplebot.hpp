@@ -6,6 +6,7 @@
 #include <boost/thread.hpp>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
+#include <geometry_msgs/Twist.h>
 
 class Simplebot
 {
@@ -19,6 +20,8 @@ public:
 
 private:
   void moveCallback(const geometry_msgs::Twist::ConstPtr& msg);
+
+  void test(int a);
 
   void timerHandler(const ros::TimerEvent& event);
 
@@ -59,7 +62,7 @@ private:
 
   double theta_;
 
-  uint8_t receive_buffer_[9];
+  uint8_t receive_buffer_[10];
 };
 
 #endif
