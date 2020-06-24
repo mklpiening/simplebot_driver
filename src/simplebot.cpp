@@ -12,7 +12,7 @@
 Simplebot::Simplebot()
   : odom_pub_(nh_.advertise<nav_msgs::Odometry>("odom", 10))
   , joint_pub_(nh_.advertise<sensor_msgs::JointState>("joint_states", 1))
-  , cmd_vel_sub_(nh_.subscribe("cmd_vel", 10, &Simplebot::moveCallback, this))
+  , cmd_vel_sub_(nh_.subscribe("cmd_vel", 1, &Simplebot::moveCallback, this))
   , cmd_timeout_timer_(nh_.createTimer(ros::Duration(0.1), &Simplebot::timeoutTimerHandler, this))
   , last_move_cmd_time_(0.0)
   , cmd_publish_timer_(nh_.createTimer(ros::Duration(0.1), &Simplebot::publishTimerHandler, this))
@@ -130,7 +130,7 @@ void Simplebot::publishTimerHandler(const ros::TimerEvent&)
 
 void Simplebot::timeoutTimerHandler(const ros::TimerEvent&)
 {
-  if (ros::Time::now() - last_move_cmd_time_ > ros::Duration(0.5))
+  if (ros::Time::now() - last_move_cmd_time_ > ros::Duration(1.0))
   {
     setSpeed(0.0, 0.0);
   }
