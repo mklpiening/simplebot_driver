@@ -137,22 +137,22 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
     if (receive_buffer_[0] == 0xFF)
     {
       int16_t raw_d_rot_fl = 0;
-      raw_d_rot_fl = raw_d_rot_fl | (receive_buffer_[1]) | (((long)receive_buffer_[2]) << 8);
+      raw_d_rot_fl = raw_d_rot_fl | (receive_buffer_[1]) | (((int16_t)receive_buffer_[2]) << 8);
       float d_rot_fl = (float)raw_d_rot_fl / 10000.0;
       float d_dist_fl = 2.0 * M_PI * wheel_radius_ * d_rot_fl;
 
       int16_t raw_d_rot_rl = 0;
-      raw_d_rot_rl = raw_d_rot_rl | (receive_buffer_[3]) | (((long)receive_buffer_[4]) << 8);
+      raw_d_rot_rl = raw_d_rot_rl | (receive_buffer_[3]) | (((int16_t)receive_buffer_[4]) << 8);
       float d_rot_rl = (float)raw_d_rot_rl / 10000.0;
       float d_dist_rl = 2.0 * M_PI * wheel_radius_ * d_rot_rl;
 
       int16_t raw_d_rot_fr = 0;
-      raw_d_rot_fr = raw_d_rot_fr | (receive_buffer_[5]) | (((long)receive_buffer_[6]) << 8);
+      raw_d_rot_fr = raw_d_rot_fr | (receive_buffer_[5]) | (((int16_t)receive_buffer_[6]) << 8);
       float d_rot_fr = (float)raw_d_rot_fr / 10000.0;
       float d_dist_fr = 2.0 * M_PI * wheel_radius_ * d_rot_fr;
 
       int16_t raw_d_rot_rr = 0;
-      raw_d_rot_rr = raw_d_rot_rr | (receive_buffer_[7]) | (((long)receive_buffer_[8]) << 8);
+      raw_d_rot_rr = raw_d_rot_rr | (receive_buffer_[7]) | (((int16_t)receive_buffer_[8]) << 8);
       float d_rot_rr = (float)raw_d_rot_rr / 10000.0;
       float d_dist_rr = 2.0 * M_PI * wheel_radius_ * d_rot_rr;
 
