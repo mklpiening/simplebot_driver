@@ -13,12 +13,16 @@ Simplebot::Simplebot()
   : odom_pub_(nh_.advertise<nav_msgs::Odometry>("odom", 10))
   , joint_pub_(nh_.advertise<sensor_msgs::JointState>("joint_states", 1))
   , cmd_vel_sub_(nh_.subscribe("cmd_vel", 10, &Simplebot::moveCallback, this))
-  , cmd_timeout_timer_(nh_.createTimer(ros::Duration(0.1), &Simplebot::timerHandler, this))
+  , cmd_timeout_timer_(nh_.createTimer(ros::Duration(0.1), &Simplebot::timeoutTimerHandler, this))
   , last_move_cmd_time_(0.0)
+  , cmd_publish_timer_(nh_.createTimer(ros::Duration(0.1), &Simplebot::publishTimerHandler, this))
   , io_()
   , x_(0.0)
   , y_(0.0)
   , theta_(0.0)
+  , vel_changed_(true)
+  , vl_(0.0)
+  , vr_(0.0)
 {
   ros::NodeHandle nh_p("~");
 
@@ -72,14 +76,6 @@ void Simplebot::moveCallback(const geometry_msgs::Twist::ConstPtr& msg)
   setSpeed(speedL, speedR);
 }
 
-void Simplebot::timerHandler(const ros::TimerEvent&)
-{
-  if (ros::Time::now() - last_move_cmd_time_ > ros::Duration(0.5))
-  {
-    setSpeed(0.0, 0.0);
-  }
-}
-
 bool checkParity(int64_t data)
 {
   int numOnes = 0;
@@ -94,40 +90,57 @@ bool checkParity(int64_t data)
   return numOnes % 2 == 0;
 }
 
+void Simplebot::publishTimerHandler(const ros::TimerEvent&)
+{
+  if (vel_changed_)
+  {
+      int64_t rot_l = vl_ * 10000 / (2 * M_PI * wheel_radius_);
+      int64_t rot_r = vr_ * 10000 / (2 * M_PI * wheel_radius_);
+
+      uint8_t msg[19];
+
+      msg[0] = 0xFF;
+
+      msg[1] = (uint8_t)((rot_l)&0xFF);
+      msg[2] = (uint8_t)((rot_l >> 8) & 0xFF);
+      msg[3] = (uint8_t)((rot_l >> 16) & 0xFF);
+      msg[4] = (uint8_t)((rot_l >> 24) & 0xFF);
+      msg[5] = (uint8_t)((rot_l >> 32) & 0xFF);
+      msg[6] = (uint8_t)((rot_l >> 40) & 0xFF);
+      msg[7] = (uint8_t)((rot_l >> 48) & 0xFF);
+      msg[8] = (uint8_t)((rot_l >> 56) & 0xFF);
+
+      msg[9] = (uint8_t)((rot_r)&0xFF);
+      msg[10] = (uint8_t)((rot_r >> 8) & 0xFF);
+      msg[11] = (uint8_t)((rot_r >> 16) & 0xFF);
+      msg[12] = (uint8_t)((rot_r >> 24) & 0xFF);
+      msg[13] = (uint8_t)((rot_r >> 32) & 0xFF);
+      msg[14] = (uint8_t)((rot_r >> 40) & 0xFF);
+      msg[15] = (uint8_t)((rot_r >> 48) & 0xFF);
+      msg[16] = (uint8_t)((rot_r >> 56) & 0xFF);
+
+      msg[17] = (uint8_t)(!checkParity(rot_l)) | (uint8_t)(!checkParity(rot_r)) << 1;
+
+      msg[18] = 0xFF;
+
+      boost::asio::write(*serial_, boost::asio::buffer(msg, 19));
+      vel_changed_ = false;
+  }
+}
+
+void Simplebot::timeoutTimerHandler(const ros::TimerEvent&)
+{
+  if (ros::Time::now() - last_move_cmd_time_ > ros::Duration(0.5))
+  {
+    setSpeed(0.0, 0.0);
+  }
+}
+
 void Simplebot::setSpeed(double vL, double vR)
 {
-  int64_t rotL = vL * 10000 / (2 * M_PI * wheel_radius_);
-  int64_t rotR = vR * 10000 / (2 * M_PI * wheel_radius_);
-
-  uint8_t msg[19];
-
-  msg[0] = 0xFF;
-
-  msg[1] = (uint8_t)((rotL)&0xFF);
-  msg[2] = (uint8_t)((rotL >> 8) & 0xFF);
-  msg[3] = (uint8_t)((rotL >> 16) & 0xFF);
-  msg[4] = (uint8_t)((rotL >> 24) & 0xFF);
-  msg[5] = (uint8_t)((rotL >> 32) & 0xFF);
-  msg[6] = (uint8_t)((rotL >> 40) & 0xFF);
-  msg[7] = (uint8_t)((rotL >> 48) & 0xFF);
-  msg[8] = (uint8_t)((rotL >> 56) & 0xFF);
-
-  msg[9] = (uint8_t)((rotR)&0xFF);
-  msg[10] = (uint8_t)((rotR >> 8) & 0xFF);
-  msg[11] = (uint8_t)((rotR >> 16) & 0xFF);
-  msg[12] = (uint8_t)((rotR >> 24) & 0xFF);
-  msg[13] = (uint8_t)((rotR >> 32) & 0xFF);
-  msg[14] = (uint8_t)((rotR >> 40) & 0xFF);
-  msg[15] = (uint8_t)((rotR >> 48) & 0xFF);
-  msg[16] = (uint8_t)((rotR >> 56) & 0xFF);
-
-  msg[17] = (uint8_t)(!checkParity(rotL)) | (uint8_t)(!checkParity(rotR)) << 1;
-
-  msg[18] = 0xFF;
-
-
-
-  boost::asio::write(*serial_, boost::asio::buffer(msg, 19));
+    vl_ = vL;
+    vr_ = vR;
+    vel_changed_ = true;
 }
 
 void Simplebot::odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred)
@@ -277,7 +290,6 @@ void Simplebot::odometryCallback(const boost::system::error_code& error, std::si
 
         speed_msg.data = d_dist_rl * 1000 / d_time;
         rear_left_speed_pub.publish(speed_msg);
-
 
         speed_msg.data = d_dist_fr * 1000 / d_time;
         front_right_speed_pub.publish(speed_msg);

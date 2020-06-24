@@ -23,7 +23,9 @@ private:
 
   void test(int a);
 
-  void timerHandler(const ros::TimerEvent& event);
+  void publishTimerHandler(const ros::TimerEvent& event);
+
+  void timeoutTimerHandler(const ros::TimerEvent& event);
 
   void readOdometry();
 
@@ -43,9 +45,15 @@ private:
 
   ros::Time last_move_cmd_time_;
 
+  ros::Timer cmd_publish_timer_;
+
   boost::thread io_thread_;
   boost::asio::io_service io_;
   std::unique_ptr<boost::asio::serial_port> serial_;
+
+  bool vel_changed_;
+  double vl_;
+  double vr_;
 
   double max_speed_;
   double axis_length_;
