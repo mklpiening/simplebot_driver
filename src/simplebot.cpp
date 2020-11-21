@@ -60,6 +60,9 @@ Simplebot::Simplebot()
 
   boost::thread t(boost::bind(&boost::asio::io_service::run, &io_));
   io_thread_.swap(t);
+
+  reconfigure_callback_ = boost::bind(&Simplebot::reconfigureCallback, this, _1, _2);
+  reconfigure_server_.setCallback(reconfigure_callback_);
 }
 
 Simplebot::~Simplebot()
@@ -94,37 +97,38 @@ void Simplebot::publishTimerHandler(const ros::TimerEvent&)
 {
   if (vel_changed_)
   {
-      int64_t rot_l = vl_ * 10000 / (2 * M_PI * wheel_radius_);
-      int64_t rot_r = vr_ * 10000 / (2 * M_PI * wheel_radius_);
+    int64_t rot_l = vl_ * 10000 / (2 * M_PI * wheel_radius_);
+    int64_t rot_r = vr_ * 10000 / (2 * M_PI * wheel_radius_);
 
-      uint8_t msg[19];
+    uint8_t msg[20];
 
-      msg[0] = 0xFF;
+    msg[0] = 0xFF;
+    msg[1] = 0x00;
 
-      msg[1] = (uint8_t)((rot_l)&0xFF);
-      msg[2] = (uint8_t)((rot_l >> 8) & 0xFF);
-      msg[3] = (uint8_t)((rot_l >> 16) & 0xFF);
-      msg[4] = (uint8_t)((rot_l >> 24) & 0xFF);
-      msg[5] = (uint8_t)((rot_l >> 32) & 0xFF);
-      msg[6] = (uint8_t)((rot_l >> 40) & 0xFF);
-      msg[7] = (uint8_t)((rot_l >> 48) & 0xFF);
-      msg[8] = (uint8_t)((rot_l >> 56) & 0xFF);
+    msg[2] = (uint8_t)((rot_l)&0xFF);
+    msg[3] = (uint8_t)((rot_l >> 8) & 0xFF);
+    msg[4] = (uint8_t)((rot_l >> 16) & 0xFF);
+    msg[5] = (uint8_t)((rot_l >> 24) & 0xFF);
+    msg[6] = (uint8_t)((rot_l >> 32) & 0xFF);
+    msg[7] = (uint8_t)((rot_l >> 40) & 0xFF);
+    msg[8] = (uint8_t)((rot_l >> 48) & 0xFF);
+    msg[9] = (uint8_t)((rot_l >> 56) & 0xFF);
 
-      msg[9] = (uint8_t)((rot_r)&0xFF);
-      msg[10] = (uint8_t)((rot_r >> 8) & 0xFF);
-      msg[11] = (uint8_t)((rot_r >> 16) & 0xFF);
-      msg[12] = (uint8_t)((rot_r >> 24) & 0xFF);
-      msg[13] = (uint8_t)((rot_r >> 32) & 0xFF);
-      msg[14] = (uint8_t)((rot_r >> 40) & 0xFF);
-      msg[15] = (uint8_t)((rot_r >> 48) & 0xFF);
-      msg[16] = (uint8_t)((rot_r >> 56) & 0xFF);
+    msg[10] = (uint8_t)((rot_r)&0xFF);
+    msg[11] = (uint8_t)((rot_r >> 8) & 0xFF);
+    msg[12] = (uint8_t)((rot_r >> 16) & 0xFF);
+    msg[13] = (uint8_t)((rot_r >> 24) & 0xFF);
+    msg[14] = (uint8_t)((rot_r >> 32) & 0xFF);
+    msg[15] = (uint8_t)((rot_r >> 40) & 0xFF);
+    msg[16] = (uint8_t)((rot_r >> 48) & 0xFF);
+    msg[17] = (uint8_t)((rot_r >> 56) & 0xFF);
 
-      msg[17] = (uint8_t)(!checkParity(rot_l)) | (uint8_t)(!checkParity(rot_r)) << 1;
+    msg[18] = (uint8_t)(!checkParity(rot_l)) | (uint8_t)(!checkParity(rot_r)) << 1;
 
-      msg[18] = 0xFF;
+    msg[19] = 0xFF;
 
-      boost::asio::write(*serial_, boost::asio::buffer(msg, 19));
-      vel_changed_ = false;
+    boost::asio::write(*serial_, boost::asio::buffer(msg, 20));
+    vel_changed_ = false;
   }
 }
 
@@ -138,9 +142,151 @@ void Simplebot::timeoutTimerHandler(const ros::TimerEvent&)
 
 void Simplebot::setSpeed(double vL, double vR)
 {
-    vl_ = vL;
-    vr_ = vR;
-    vel_changed_ = true;
+  vl_ = vL;
+  vr_ = vR;
+  vel_changed_ = true;
+}
+
+void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_kp, float br_ki, float br_kd,
+                               float fl_kp, float fl_ki, float fl_kd, float bl_kp, float bl_ki, float bl_kd)
+{
+  uint8_t msg[99];
+
+  int i = 0;
+  msg[i++] = 0xFF;
+  msg[i++] = 0x01;
+
+  int64_t kp;
+  int64_t ki;
+  int64_t kd;
+
+  kp = fr_kp * 10000;
+  ki = fr_ki * 10000;
+  kd = fr_kd * 10000;
+
+  msg[i++] = (uint8_t)((kp)&0xFF);
+  msg[i++] = (uint8_t)((kp >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((ki)&0xFF);
+  msg[i++] = (uint8_t)((ki >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((kd)&0xFF);
+  msg[i++] = (uint8_t)((kd >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
+
+  kp = br_kp * 10000;
+  ki = br_ki * 10000;
+  kd = br_kd * 10000;
+
+  msg[i++] = (uint8_t)((kp)&0xFF);
+  msg[i++] = (uint8_t)((kp >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((ki)&0xFF);
+  msg[i++] = (uint8_t)((ki >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((kd)&0xFF);
+  msg[i++] = (uint8_t)((kd >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
+
+  kp = fl_kp * 10000;
+  ki = fl_ki * 10000;
+  kd = fl_kd * 10000;
+
+  msg[i++] = (uint8_t)((kp)&0xFF);
+  msg[i++] = (uint8_t)((kp >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((ki)&0xFF);
+  msg[i++] = (uint8_t)((ki >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((kd)&0xFF);
+  msg[i++] = (uint8_t)((kd >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
+
+  kp = bl_kp * 10000;
+  ki = bl_ki * 10000;
+  kd = bl_kd * 10000;
+
+  msg[i++] = (uint8_t)((kp)&0xFF);
+  msg[i++] = (uint8_t)((kp >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kp >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((ki)&0xFF);
+  msg[i++] = (uint8_t)((ki >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((ki >> 56) & 0xFF);
+
+  msg[i++] = (uint8_t)((kd)&0xFF);
+  msg[i++] = (uint8_t)((kd >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
+
+  msg[i++] = 0xFF;
+
+  boost::asio::write(*serial_, boost::asio::buffer(msg, 99));
 }
 
 void Simplebot::odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred)
@@ -308,4 +454,10 @@ void Simplebot::readOdometry()
   serial_->async_read_some(boost::asio::buffer(receive_buffer_, 10),
                            boost::bind(&Simplebot::odometryCallback, this, boost::asio::placeholders::error,
                                        boost::asio::placeholders::bytes_transferred));
+}
+
+void Simplebot::reconfigureCallback(simplebot_driver::SimplebotConfig& config, uint32_t level)
+{
+  setMotorParams(config.fr_kp, config.fr_ki, config.fr_kd, config.br_kp, config.br_ki, config.br_kd, config.fl_kp,
+                 config.fl_ki, config.fl_kd, config.bl_kp, config.bl_ki, config.bl_kd);
 }

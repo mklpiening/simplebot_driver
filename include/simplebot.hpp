@@ -7,6 +7,8 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Twist.h>
+#include <dynamic_reconfigure/server.h>
+#include <simplebot_driver/SimplebotConfig.h>
 
 class Simplebot
 {
@@ -15,6 +17,9 @@ public:
   ~Simplebot();
 
   void setSpeed(double vL, double vR);
+
+  void setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_kp, float br_ki, float br_kd, float fl_kp,
+                      float fl_ki, float fl_kd, float bl_kp, float bl_ki, float bl_kd);
 
   void odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred);
 
@@ -29,7 +34,12 @@ private:
 
   void readOdometry();
 
+  void reconfigureCallback(simplebot_driver::SimplebotConfig& config, uint32_t level);
+
   ros::NodeHandle nh_;
+
+  dynamic_reconfigure::Server<simplebot_driver::SimplebotConfig> reconfigure_server_;
+  dynamic_reconfigure::Server<simplebot_driver::SimplebotConfig>::CallbackType reconfigure_callback_;
 
   ros::Publisher odom_pub_;
   ros::Publisher joint_pub_;

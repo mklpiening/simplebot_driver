@@ -1,0 +1,15 @@
+bl_kd: 0.2
+bl_ki: 0.7
+bl_kp: 72.0
+
+br_kd: 0.2
+br_ki: 0.7
+br_kp: 72.0
+
+fl_kd: 0.2
+fl_ki: 0.7
+fl_kp: 72.0
+
+fr_kd: 0.2
+fr_ki: 0.7
+fr_kp: 72.0

@@ -10,11 +10,17 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   tf
+  dynamic_reconfigure
 )
 
 find_package(Boost REQUIRED)
 
+generate_dynamic_reconfigure_options(
+  cfg/Simplebot.cfg
+)
+
 catkin_package(
+  CATKIN_DEPENDS dynamic_reconfigure
 )
 
 ###########
@@ -30,6 +36,12 @@ include_directories(
 add_executable(simplebot 
   src/simplebot.cpp
   src/simplebot_node.cpp
+)
+
+add_dependencies(simplebot 
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${PROJECT_NAME}_gencfg
 )
 
 target_link_libraries(simplebot
