@@ -147,10 +147,11 @@ void Simplebot::setSpeed(double vL, double vR)
   vel_changed_ = true;
 }
 
-void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_kp, float br_ki, float br_kd,
-                               float fl_kp, float fl_ki, float fl_kd, float bl_kp, float bl_ki, float bl_kd)
+void Simplebot::setMotorParams(float fr_rps_to_pwm, float fr_kp, float fr_ki, float fr_kd, float br_rps_to_pwm,
+                               float br_kp, float br_ki, float br_kd, float fl_rps_to_pwm, float fl_kp, float fl_ki,
+                               float fl_kd, float bl_rps_to_pwm, float bl_kp, float bl_ki, float bl_kd)
 {
-  uint8_t msg[99];
+  uint8_t msg[131];
 
   int i = 0;
   msg[i++] = 0xFF;
@@ -159,6 +160,8 @@ void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_k
   int64_t kp;
   int64_t ki;
   int64_t kd;
+
+  int64_t rps_to_pwm;
 
   kp = fr_kp * 10000;
   ki = fr_ki * 10000;
@@ -191,6 +194,17 @@ void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_k
   msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
   msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
 
+  rps_to_pwm = fr_rps_to_pwm * 10000;
+
+  msg[i++] = (uint8_t)((rps_to_pwm)&0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 56) & 0xFF);
+
   kp = br_kp * 10000;
   ki = br_ki * 10000;
   kd = br_kd * 10000;
@@ -221,6 +235,17 @@ void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_k
   msg[i++] = (uint8_t)((kd >> 40) & 0xFF);
   msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
   msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
+
+  rps_to_pwm = br_rps_to_pwm * 10000;
+
+  msg[i++] = (uint8_t)((rps_to_pwm)&0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 56) & 0xFF);
 
   kp = fl_kp * 10000;
   ki = fl_ki * 10000;
@@ -253,6 +278,17 @@ void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_k
   msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
   msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
 
+  rps_to_pwm = fl_rps_to_pwm * 10000;
+
+  msg[i++] = (uint8_t)((rps_to_pwm)&0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 56) & 0xFF);
+
   kp = bl_kp * 10000;
   ki = bl_ki * 10000;
   kd = bl_kd * 10000;
@@ -284,9 +320,20 @@ void Simplebot::setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_k
   msg[i++] = (uint8_t)((kd >> 48) & 0xFF);
   msg[i++] = (uint8_t)((kd >> 56) & 0xFF);
 
+  rps_to_pwm = bl_rps_to_pwm * 10000;
+
+  msg[i++] = (uint8_t)((rps_to_pwm)&0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 8) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 16) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 24) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 32) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 40) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 48) & 0xFF);
+  msg[i++] = (uint8_t)((rps_to_pwm >> 56) & 0xFF);
+
   msg[i++] = 0xFF;
 
-  boost::asio::write(*serial_, boost::asio::buffer(msg, 99));
+  boost::asio::write(*serial_, boost::asio::buffer(msg, 131));
 }
 
 void Simplebot::odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred)
@@ -458,6 +505,7 @@ void Simplebot::readOdometry()
 
 void Simplebot::reconfigureCallback(simplebot_driver::SimplebotConfig& config, uint32_t level)
 {
-  setMotorParams(config.fr_kp, config.fr_ki, config.fr_kd, config.br_kp, config.br_ki, config.br_kd, config.fl_kp,
-                 config.fl_ki, config.fl_kd, config.bl_kp, config.bl_ki, config.bl_kd);
+  setMotorParams(config.fr_rps_to_pwm, config.fr_kp, config.fr_ki, config.fr_kd, config.br_rps_to_pwm, config.br_kp,
+                 config.br_ki, config.br_kd, config.fl_rps_to_pwm, config.fl_kp, config.fl_ki, config.fl_kd,
+                 config.bl_rps_to_pwm, config.bl_kp, config.bl_ki, config.bl_kd);
 }

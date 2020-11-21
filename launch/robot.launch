@@ -7,7 +7,7 @@
   <node name="simplebot" pkg="simplebot_driver" type="simplebot" respawn="false" output="screen">
     <param name="port" type="string" value="/dev/ttyUSB0" />
     <param name="baudrate" type="int" value="115200" />
-    <param name="max_speed" type="double" value="0.5" />
+    <param name="max_speed" type="double" value="0.4" />
     <param name="wheel_radius" type="double" value="0.025" />
     <param name="axis_length" type="double" value="0.18" />
     <param name="turning_adaption" type="double" value="0.79" />

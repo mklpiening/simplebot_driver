@@ -18,8 +18,9 @@ public:
 
   void setSpeed(double vL, double vR);
 
-  void setMotorParams(float fr_kp, float fr_ki, float fr_kd, float br_kp, float br_ki, float br_kd, float fl_kp,
-                      float fl_ki, float fl_kd, float bl_kp, float bl_ki, float bl_kd);
+  void setMotorParams(float fr_rps_to_pwm, float fr_kp, float fr_ki, float fr_kd, float br_rps_to_pwm, float br_kp,
+                      float br_ki, float br_kd, float fl_rps_to_pwm, float fl_kp, float fl_ki, float fl_kd,
+                      float bl_rps_to_pwm, float bl_kp, float bl_ki, float bl_kd);
 
   void odometryCallback(const boost::system::error_code& error, std::size_t bytes_transferred);
 

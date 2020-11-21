@@ -10,7 +10,5 @@ int main(int argc, char** argv)
   Simplebot simplebot;
   std::cout << "connected!" << std::endl;
 
-  simplebot.setMotorParams(40.0, 1.0, 1.0, 40.0, 1.0, 1.0, 40.0, 1.0, 1.0, 40.0, 1.0, 1.0);
-
   ros::spin();
 }
